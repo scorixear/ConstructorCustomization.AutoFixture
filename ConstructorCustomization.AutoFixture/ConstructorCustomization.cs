@@ -57,6 +57,7 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     private IValueCreationService ValueCreationService { get; set; }
     private ICircularDependencyServiceFactory CircularDependencyServiceFactory { get; set; }
     private ICircularDependencyService? ActiveCircularDependencyService { get; set; }
+    private Dictionary<string, object?>? ActiveResolvedPropertyValues { get; set; }
     private Dictionary<string, string> ExplicitParameterPropertyMappings { get; }
 
     // Registered services from Configure() — reset on every Customize() call
@@ -377,13 +378,14 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
         DefaultPropertyValueStore.SetValue(propertyName, new ConfiguredValueFactory(fixture =>
         {
             var dependencyPropertyName = PropertyExpressionParser.GetPropertyName(dependencyExpression);
-            if (!PropertyValueResolutionPolicy.TryResolveConfiguredValue(
+            if (!TryGetActiveResolvedPropertyValue(dependencyPropertyName, out var mappedResolvedValue)
+                && !PropertyValueResolutionPolicy.TryResolveConfiguredValue(
                         dependencyPropertyName,
                         OverridePropertyValueStore,
                         DefaultPropertyValueStore,
                         fixture,
                         ActiveCircularDependencyService ?? CircularDependencyServiceFactory.Create(),
-                        out var mappedResolvedValue,
+                        out mappedResolvedValue,
                         out _))
             {
                 mappedResolvedValue = ValueCreationService.CreateValue(fixture, typeof(TDependency));
@@ -527,13 +529,20 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     {
         var circularDependencyService = CircularDependencyServiceFactory.Create();
         var previousCircularDependencyService = ActiveCircularDependencyService;
+        var previousResolvedPropertyValues = ActiveResolvedPropertyValues;
         ActiveCircularDependencyService = circularDependencyService;
+        ActiveResolvedPropertyValues = new Dictionary<string, object?>(DomainOptions.PropertyNameComparer);
 
         try
         {
             var constructors = typeof(T).GetConstructors();
             var constructor = ConstructorSelector.SelectConstructor(typeof(T), constructors);
             var parameters = constructor.GetParameters();
+            var targetPropertyNames = typeof(T)
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Select(p => p.Name)
+                .Distinct(DomainOptions.PropertyNameComparer)
+                .ToArray();
             var parameterValues = new object?[parameters.Length];
 
             for (var i = 0; i < parameters.Length; i++)
@@ -557,6 +566,8 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
                         parameterValues[i] = ValueCreationService.CreateValue(fixture, parameter);
                     }
 
+                    CacheResolvedPropertyValue(mappedPropertyName, parameterValues[i]);
+
                     continue;
                 }
 
@@ -575,10 +586,16 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
                         out _))
                 {
                     parameterValues[i] = resolvedValue;
+                    CacheResolvedPropertyValue(propertyName, parameterValues[i]);
                 }
                 else
                 {
                     parameterValues[i] = ValueCreationService.CreateValue(fixture, parameter);
+
+                    if (ParameterPropertyMatcher.TryGetPropertyName(parameter, targetPropertyNames, out var resolvedPropertyName))
+                    {
+                        CacheResolvedPropertyValue(resolvedPropertyName, parameterValues[i]);
+                    }
                 }
             }
 
@@ -587,7 +604,25 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
         finally
         {
             ActiveCircularDependencyService = previousCircularDependencyService;
+            ActiveResolvedPropertyValues = previousResolvedPropertyValues;
         }
+    }
+
+    private void CacheResolvedPropertyValue(string propertyName, object? value)
+    {
+        if (ActiveResolvedPropertyValues is null)
+        {
+            return;
+        }
+
+        ActiveResolvedPropertyValues[propertyName] = value;
+    }
+
+    private bool TryGetActiveResolvedPropertyValue(string propertyName, out object? value)
+    {
+        value = null;
+        return ActiveResolvedPropertyValues is not null
+            && ActiveResolvedPropertyValues.TryGetValue(propertyName, out value);
     }
 
     private bool TryGetMappedPropertyName(ParameterInfo parameter, out string propertyName)

@@ -466,6 +466,71 @@ internal sealed class ConstructorCustomizationTests
     }
 
     [Test]
+    public void CreateInstance_WithDefaultDependency_DependencyResolvedFirst_ReusesResolvedDependencyValue()
+    {
+        var fixture = new Fixture();
+        var customization = new ProbeDependencyFirstCustomization
+        {
+            ConfigureAction = c => c.UseService(new SequentialStringValueCreationService()),
+            BeforeCreate = c =>
+            {
+                c.SetDependencyDefaultFactory(p => p.Name, p => p.City, city => city);
+            }
+        };
+
+        customization.Customize(fixture);
+        var created = fixture.Create<DependencyFirstPersonModel>();
+
+        Assert.That(created.Name, Is.EqualTo(created.City));
+    }
+
+    [Test]
+    public void CreateInstance_WithDefaultDependency_DependencyResolvedFirst_WithOverride_UsesOverrideValue()
+    {
+        var fixture = new Fixture();
+        var customization = new ProbeDependencyFirstCustomization
+        {
+            BeforeCreate = c =>
+            {
+                c.SetDependencyDefaultFactory(p => p.Name, p => p.City, city => city);
+            }
+        }
+        .With(p => p.City, "override-city");
+
+        customization.Customize(fixture);
+        var created = fixture.Create<DependencyFirstPersonModel>();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(created.City, Is.EqualTo("override-city"));
+            Assert.That(created.Name, Is.EqualTo("override-city"));
+        });
+    }
+
+    [Test]
+    public void CreateInstance_WithDefaultDependency_DependencyResolvedFirst_WithDefault_UsesDefaultValue()
+    {
+        var fixture = new Fixture();
+        var customization = new ProbeDependencyFirstCustomization
+        {
+            BeforeCreate = c =>
+            {
+                c.SetDefaultValue(p => p.City, "default-city");
+                c.SetDependencyDefaultFactory(p => p.Name, p => p.City, city => city);
+            }
+        };
+
+        customization.Customize(fixture);
+        var created = fixture.Create<DependencyFirstPersonModel>();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(created.City, Is.EqualTo("default-city"));
+            Assert.That(created.Name, Is.EqualTo("default-city"));
+        });
+    }
+
+    [Test]
     public void Customization_WithCaseSensitiveMatcher_UsesPascalFallback()
     {
         var fixture = new Fixture();
@@ -611,6 +676,38 @@ internal sealed class ConstructorCustomizationTests
         public void UseStrategyInternal(ISpecimenBuilderStrategy strategy) => UseStrategy(strategy);
     }
 
+    private sealed class ProbeDependencyFirstCustomization : ConstructorCustomization<DependencyFirstPersonModel, ProbeDependencyFirstCustomization>
+    {
+        public Action<ProbeDependencyFirstCustomization>? ConfigureAction { get; set; }
+
+        public Action<ProbeDependencyFirstCustomization>? BeforeCreate { get; set; }
+
+        protected override void Configure()
+        {
+            ConfigureAction?.Invoke(this);
+        }
+
+        protected override DependencyFirstPersonModel CreateInstance(IFixture fixture)
+        {
+            BeforeCreate?.Invoke(this);
+            return base.CreateInstance(fixture);
+        }
+
+        public ProbeDependencyFirstCustomization SetDefaultValue<TProperty>(Expression<Func<DependencyFirstPersonModel, TProperty>> expression, TProperty value)
+        {
+            SetDefault(expression, value);
+            return this;
+        }
+
+        public ProbeDependencyFirstCustomization SetDependencyDefaultFactory<TProperty, TDependency>(Expression<Func<DependencyFirstPersonModel, TProperty>> expression, Expression<Func<DependencyFirstPersonModel, TDependency>> dependencyExpression, Func<TDependency, TProperty> factory)
+        {
+            SetDependencyDefault(expression, dependencyExpression, factory);
+            return this;
+        }
+
+        public void UseService(IValueCreationService service) => UseValueCreationService(service);
+    }
+
     private sealed class ProbeTripleStringCustomization : ConstructorCustomization<TripleStringModel, ProbeTripleStringCustomization>
     {
         public Action<ProbeTripleStringCustomization>? ConfigureAction { get; set; }
@@ -664,6 +761,24 @@ internal sealed class ConstructorCustomizationTests
             if (type == typeof(string))
             {
                 return "svc-string";
+            }
+
+            return Activator.CreateInstance(type);
+        }
+    }
+
+    private sealed class SequentialStringValueCreationService : IValueCreationService
+    {
+        private int StringCounter { get; set; }
+
+        public object? CreateValue(IFixture fixture, ParameterInfo parameter) => CreateValue(fixture, parameter.ParameterType);
+
+        public object? CreateValue(IFixture fixture, Type type)
+        {
+            if (type == typeof(string))
+            {
+                StringCounter++;
+                return $"string-{StringCounter}";
             }
 
             return Activator.CreateInstance(type);
