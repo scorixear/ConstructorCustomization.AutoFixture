@@ -1,7 +1,7 @@
 namespace ConstructorCustomization.AutoFixture.Tests.Customization.Domain;
 
 [TestFixture]
-internal sealed class ConfiguredValueFactoryTests
+public sealed class ConfiguredValueFactoryTests
 {
     [Test]
     public void Resolve_InvokesResolverWithFixture()

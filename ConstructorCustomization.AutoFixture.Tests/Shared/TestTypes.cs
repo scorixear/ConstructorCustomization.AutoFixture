@@ -51,6 +51,19 @@ internal sealed class PersonModel
     public string City { get; }
 }
 
+internal sealed class DependencyFirstPersonModel
+{
+    public DependencyFirstPersonModel(string city, string name)
+    {
+        City = city;
+        Name = name;
+    }
+
+    public string City { get; }
+
+    public string Name { get; }
+}
+
 internal sealed class CollectionModel
 {
     public CollectionModel(

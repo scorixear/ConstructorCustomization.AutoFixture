@@ -1,7 +1,7 @@
 namespace ConstructorCustomization.AutoFixture.Tests.Customization.Domain;
 
 [TestFixture]
-internal sealed class CustomizationDomainOptionsTests
+public sealed class CustomizationDomainOptionsTests
 {
     [Test]
     public void From_WhenOptionsValid_CopiesValues()
