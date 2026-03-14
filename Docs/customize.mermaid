@@ -1,0 +1,16 @@
+flowchart TD
+    C["Customize(fixture)"]
+    C --> C1[Reset Extensions]
+    C1 --> C2[Reset Plugins]
+    C2 --> C3[Reset Strategies]
+    C3 --> C4["Configure()"]
+    C4 --> C5[Set custom registrations]
+    C5 --> C6{Has custom ValueStoreFactory?}
+    C6 -->|Yes| C7["OverrideStore = Factory()"]
+    C7 --> C81[Copy overrides to new store]
+    C81 --> C82["DefaultStore = Factory()"]
+    C6 -->|No| D["fixture.Customize()"]
+    C82 --> D
+
+
+

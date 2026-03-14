@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/SolutionFiles/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="nuget.config" />
+  </Folder>
+  <Project Path="ConstructorCustomization.AutoFixture/ConstructorCustomization.AutoFixture.csproj" />
+  <Project Path="ConstructorCustomization.AutoFixture.Tests/ConstructorCustomization.AutoFixture.Tests.csproj" />
+</Solution>

@@ -1,0 +1,96 @@
+name: Publish NuGet Package
+
+on:
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: publish-nuget
+    cancel-in-progress: false
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Setup .NET
+              uses: actions/setup-dotnet@v4
+              with:
+                  dotnet-version: 10.0.x
+
+            - name: Setup GitVersion
+              uses: gittools/actions/gitversion/setup@v3
+              with:
+                  versionSpec: 5.x
+
+            - name: Determine Version
+              id: gitversion
+              uses: gittools/actions/gitversion/execute@v3
+
+            - name: Restore
+              run: dotnet restore
+
+            - name: Build
+              run: dotnet build --configuration Release --no-restore /p:Version=${{ steps.gitversion.outputs.semVer }}
+
+            - name: Test
+              run: dotnet test --configuration Release --no-build --verbosity normal
+
+            - name: Pack
+              run: >-
+                  dotnet pack ConstructorCustomization.AutoFixture/ConstructorCustomization.AutoFixture.csproj
+                  --configuration Release
+                  --no-build
+                  --output ./artifacts
+                  /p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersionV2 }}
+                  /p:Version=${{ steps.gitversion.outputs.semVer }}
+
+            - name: Publish package to nuget.org
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  shopt -s nullglob
+
+                  packages=(./artifacts/*.nupkg)
+                  for package in "${packages[@]}"; do
+                    if [[ "${package}" == *.snupkg ]]; then
+                      continue
+                    fi
+
+                    dotnet nuget push "${package}" \
+                      --source https://api.nuget.org/v3/index.json \
+                      --api-key "${{ secrets.NUGET_API_KEY }}" \
+                      --skip-duplicate
+                  done
+
+            - name: Publish symbols to nuget.org
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  shopt -s nullglob
+
+                  symbol_packages=(./artifacts/*.snupkg)
+                  if [ "${#symbol_packages[@]}" -eq 0 ]; then
+                    echo "No symbol packages found."
+                    exit 0
+                  fi
+
+                  for symbol_package in "${symbol_packages[@]}"; do
+                    dotnet nuget push "${symbol_package}" \
+                      --source https://api.nuget.org/v3/index.json \
+                      --api-key "${{ secrets.NUGET_API_KEY }}" \
+                      --skip-duplicate
+                  done
+
+            - name: Workflow Summary
+              run: |
+                  echo "SemVer: ${{ steps.gitversion.outputs.semVer }}" >> "$GITHUB_STEP_SUMMARY"
+                  echo "NuGet version: ${{ steps.gitversion.outputs.nuGetVersionV2 }}" >> "$GITHUB_STEP_SUMMARY"
+                  echo "Feed: https://api.nuget.org/v3/index.json" >> "$GITHUB_STEP_SUMMARY"

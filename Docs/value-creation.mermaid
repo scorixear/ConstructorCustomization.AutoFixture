@@ -1,0 +1,17 @@
+flowchart TD
+    A["CreateValue()"] --> B[Foreach Plugin]
+    B --> C{"plugin.CanCreate(type)"}
+    C -->|Yes| D["plugin.Create(type)"]
+    D --> End["Return value"]
+    C -->|No| E[Next plugin]
+    E --> B
+    E --> F[No plugin could create value]
+    F --> G[Foreach Strategy]
+    G --> H{"strategy.CanBuild(type)"}
+    H -->|Yes| I["strategy.Build(type)"]
+    I --> End
+    H -->|No| J[Next strategy]
+    J --> G
+    J --> K[No strategy could build value]
+    K --> L["fixture.Create(type)"]
+    L --> End

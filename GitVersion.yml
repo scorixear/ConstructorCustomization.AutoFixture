@@ -1,0 +1,28 @@
+mode: ContinuousDeployment
+next-version: 0.0.0
+tag-prefix: '[vV]'
+
+branches:
+  main:
+    regex: ^main$
+    label: beta
+    increment: None
+    is-main-branch: true
+    prevent-increment:
+      when-current-commit-tagged: true
+
+  develop:
+    regex: ^develop$
+    label: alpha
+    increment: None
+    source-branches:
+      - main
+    prevent-increment:
+      when-current-commit-tagged: true
+
+  pull-request:
+    label: pr
+    increment: None
+
+ignore:
+  sha: []

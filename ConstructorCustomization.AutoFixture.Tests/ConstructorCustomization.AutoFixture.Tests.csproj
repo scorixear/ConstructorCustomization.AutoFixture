@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
+    <PackageId>ConstructorCustomization.AutoFixture.Tests</PackageId>
+    <AssemblyName>ConstructorCustomization.AutoFixture.Tests</AssemblyName>
+    <ProductName>ConstructorCustomization.AutoFixture.Tests</ProductName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit3TestAdapter" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ConstructorCustomization.AutoFixture\ConstructorCustomization.AutoFixture.csproj" />
+  </ItemGroup>
+</Project>

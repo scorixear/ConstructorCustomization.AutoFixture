@@ -1,0 +1,16 @@
+flowchart TD
+    A[CreateInstance] --> B["ConstructorSelector.SelectConstructor()"]
+    B --> C[For each parameter]
+    C --> D{Has Explicit Property Mappings?}
+    D --> |Yes| K1[Use stored Property Value]
+    D --> |No| K2["PPM.TryGetPropertyName()"]
+    K1 --> E{Has Override Store Value?}
+    K2 --> E
+    E --> |Yes| H[Use Value]
+    E --> |No| F{Has Default Store Value?}
+    F --> |Yes| H[Use Value]
+    F --> |No| G["VCS.CreateValue()"]
+    G --> H[Use Value]
+    H --> I[Next parameter]
+    I --> C
+    I --> End["constructor.Invoke()"]
