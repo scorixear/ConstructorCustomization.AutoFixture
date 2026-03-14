@@ -3,7 +3,7 @@ using ConstructorCustomization.AutoFixture.Tests.Shared;
 namespace ConstructorCustomization.AutoFixture.Tests.ValueGeneration.Application;
 
 [TestFixture]
-internal sealed class ValueCreationServiceTests
+public sealed class ValueCreationServiceTests
 {
     [Test]
     public void CreateValue_UsesPluginBeforeStrategies()

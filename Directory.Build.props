@@ -20,7 +20,11 @@
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
-        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+        <ContinuousIntegrationBuild Condition="
+        '$(CI)' == 'true' Or
+        '$(GITHUB_ACTIONS)' == 'true' Or
+        '$(TF_BUILD)' == 'True'">true</ContinuousIntegrationBuild>
+        <ContinuousIntegrationBuild Condition="'$(ContinuousIntegrationBuild)' == ''">false</ContinuousIntegrationBuild>
         <ProductName>ConstructorCustomization.AutoFixture</ProductName>
     </PropertyGroup>
 </Project>

@@ -1,7 +1,7 @@
 namespace ConstructorCustomization.AutoFixture.Tests.ValueGeneration.Adapters;
 
 [TestFixture]
-internal sealed class DelegateValueCreationPluginTests
+public sealed class DelegateValueCreationPluginTests
 {
     [Test]
     public void CanCreate_DelegatesToPredicate()
