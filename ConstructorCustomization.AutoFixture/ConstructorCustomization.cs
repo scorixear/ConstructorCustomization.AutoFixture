@@ -55,6 +55,8 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     private IConstructorSelector ConstructorSelector { get; set; }
     private IParameterPropertyMatcher ParameterPropertyMatcher { get; set; }
     private IValueCreationService ValueCreationService { get; set; }
+    private ICircularDependencyServiceFactory CircularDependencyServiceFactory { get; set; }
+    private ICircularDependencyService? ActiveCircularDependencyService { get; set; }
     private Dictionary<string, string> ExplicitParameterPropertyMappings { get; }
 
     // Registered services from Configure() — reset on every Customize() call
@@ -63,11 +65,11 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     private IConstructorSelector? RegisteredConstructorSelector { get; set; }
     private IParameterPropertyMatcher? RegisteredParameterPropertyMatcher { get; set; }
     private IValueCreationService? RegisteredValueCreationService { get; set; }
+    private ICircularDependencyServiceFactory? RegisteredCircularDependencyServiceFactory { get; set; }
 
     // Plugins and strategies registered via Configure() are stored here and applied to the default value creation service factory
     protected List<IValueCreationPlugin> Plugins { get; } = [];
     protected List<ISpecimenBuilderStrategy> UserStrategies { get; } = [];
-
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ConstructorCustomization{T, TSelf}"/> class.
@@ -84,6 +86,7 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
         ParameterPropertyMatcher = new CaseInsensitiveParameterPropertyMatcher(DomainOptions.PropertyNameComparer);
         ValueCreationService = new ValueCreationService(Plugins, DefaultServiceFactory.CreateSpecimenStrategies(), Options);
         ExplicitParameterPropertyMappings = new Dictionary<string, string>(DomainOptions.PropertyNameComparer);
+        CircularDependencyServiceFactory = new DenyCircularDependenyServiceFactory();
     }
 
     /// <summary>
@@ -98,6 +101,7 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
         RegisteredPropertyExpressionParser = null;
         RegisteredValueStoreFactory = null;
         RegisteredValueCreationService = null;
+        RegisteredCircularDependencyServiceFactory = null;
         Plugins.Clear();
         UserStrategies.Clear();
         ExplicitParameterPropertyMappings.Clear();
@@ -129,6 +133,10 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
                 Plugins,
                 UserStrategies.Concat(DefaultServiceFactory.CreateSpecimenStrategies()),
                 Options);
+        }
+        if (RegisteredCircularDependencyServiceFactory is not null)
+        {
+            CircularDependencyServiceFactory = RegisteredCircularDependencyServiceFactory;
         }
 
         if (RegisteredValueStoreFactory is not null)
@@ -296,6 +304,17 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
         RegisteredValueCreationService = service;
     }
 
+    /// <summary>
+    /// Registers a factory for circular dependency services that replaces the default behavior of throwing on circular dependencies.
+    /// Call from <see cref="Configure"/>.
+    /// </summary>
+    /// <param name="factory">The factory that produces circular dependency services.</param>
+    protected void UseCircularDependencyServiceFactory(ICircularDependencyServiceFactory factory)
+    {
+        ThrowIfNull(factory);
+        RegisteredCircularDependencyServiceFactory = factory;
+    }
+
     #endregion
 
     // ── Subclass defaults — for use inside CreateInstance() override ─────────
@@ -332,6 +351,46 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
         ThrowIfNull(valueFactory);
         var propertyName = PropertyExpressionParser.GetPropertyName(propertyExpression);
         DefaultPropertyValueStore.SetValue(propertyName, new ConfiguredValueFactory(fixture => valueFactory(fixture)));
+    }
+
+    /// <summary>
+    /// Sets a default value for a property that is derived from a dependency property.
+    /// The default is used only when no test override was provided via <see cref="With{TProperty}(Expression{Func{T,TProperty}},TProperty)"/>.
+    /// Be aware of circular dependency issues.
+    /// The ICircularDependencyService is used to handle circular dependencies.
+    /// On Default behaviour, this will throw an exception when a circular dependency is detected. To change this behaviour, use <see cref="UseCircularDependencyServiceFactory"/>.
+    /// 
+    /// Import! When using this method, the dependency property will be evaluated at that point.
+    /// </summary>
+    /// <typeparam name="TProperty">The Property type to set</typeparam>
+    /// <typeparam name="TDependency">The Dependency type to use</typeparam>
+    /// <param name="propertyExpression">The expression to select the property</param>
+    /// <param name="dependencyExpression">The expression to select the dependency property</param>
+    /// <param name="valueFactory">The factory function to create the property value from the dependency</param>
+    protected void SetDependencyDefault<TProperty, TDependency>(
+        Expression<Func<T, TProperty>> propertyExpression,
+        Expression<Func<T, TDependency>> dependencyExpression,
+        Func<TDependency, TProperty> valueFactory)
+    {
+        ThrowIfNull(valueFactory);
+        var propertyName = PropertyExpressionParser.GetPropertyName(propertyExpression);
+        DefaultPropertyValueStore.SetValue(propertyName, new ConfiguredValueFactory(fixture =>
+        {
+            var dependencyPropertyName = PropertyExpressionParser.GetPropertyName(dependencyExpression);
+            if (!PropertyValueResolutionPolicy.TryResolveConfiguredValue(
+                        dependencyPropertyName,
+                        OverridePropertyValueStore,
+                        DefaultPropertyValueStore,
+                        fixture,
+                        ActiveCircularDependencyService ?? CircularDependencyServiceFactory.Create(),
+                        out var mappedResolvedValue,
+                        out _))
+            {
+                mappedResolvedValue = ValueCreationService.CreateValue(fixture, typeof(TDependency));
+            }
+            OverridePropertyValueStore.SetValue(dependencyPropertyName, mappedResolvedValue);
+            return valueFactory((TDependency)mappedResolvedValue!);
+        }));
     }
 
     #endregion
@@ -419,15 +478,16 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     /// Gets the resolved value for the specified property — test override first, then subclass default,
     /// then generates one from the fixture.
     /// </summary>
-    protected virtual object? GetValueOrCreateForProperty(Expression<Func<T, object?>> propertyExpression, IFixture fixture)
+    protected virtual object? GetValueOrCreateForProperty<TProperty>(Expression<Func<T, TProperty>> propertyExpression, IFixture fixture)
     {
         var propertyName = PropertyExpressionParser.GetPropertyName(propertyExpression);
+        var circularDependencyService = ActiveCircularDependencyService ?? CircularDependencyServiceFactory.Create();
         if (PropertyValueResolutionPolicy.TryResolveConfiguredValue(
             propertyName,
             OverridePropertyValueStore,
             DefaultPropertyValueStore,
             fixture,
-            ResolveConfiguredValue,
+            circularDependencyService,
             out var resolvedValue,
             out _))
         {
@@ -440,7 +500,7 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     /// <summary>
     /// Sets a test override value for the specified property.
     /// </summary>
-    protected virtual void SetValueForProperty(Expression<Func<T, object?>> propertyExpression, object? value)
+    protected virtual void SetValueForProperty<TProperty>(Expression<Func<T, TProperty>> propertyExpression, TProperty value)
     {
         var propertyName = PropertyExpressionParser.GetPropertyName(propertyExpression);
         OverridePropertyValueStore.SetValue(propertyName, value);
@@ -449,7 +509,7 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     /// <summary>
     /// Removes the test override for the specified property.
     /// </summary>
-    protected virtual void RemoveValueForProperty(Expression<Func<T, object?>> propertyExpression)
+    protected virtual void RemoveValueForProperty<TProperty>(Expression<Func<T, TProperty>> propertyExpression)
     {
         var propertyName = PropertyExpressionParser.GetPropertyName(propertyExpression);
         OverridePropertyValueStore.RemoveValue(propertyName);
@@ -465,58 +525,69 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     /// <returns>A constructed instance of <typeparamref name="T"/>.</returns>
     protected virtual T CreateInstance(IFixture fixture)
     {
-        var constructors = typeof(T).GetConstructors();
-        var constructor = ConstructorSelector.SelectConstructor(typeof(T), constructors);
-        var parameters = constructor.GetParameters();
-        var parameterValues = new object?[parameters.Length];
+        var circularDependencyService = CircularDependencyServiceFactory.Create();
+        var previousCircularDependencyService = ActiveCircularDependencyService;
+        ActiveCircularDependencyService = circularDependencyService;
 
-        for (var i = 0; i < parameters.Length; i++)
+        try
         {
-            var parameter = parameters[i];
-            if (TryGetMappedPropertyName(parameter, out var mappedPropertyName))
+            var constructors = typeof(T).GetConstructors();
+            var constructor = ConstructorSelector.SelectConstructor(typeof(T), constructors);
+            var parameters = constructor.GetParameters();
+            var parameterValues = new object?[parameters.Length];
+
+            for (var i = 0; i < parameters.Length; i++)
             {
-                if (PropertyValueResolutionPolicy.TryResolveConfiguredValue(
-                    mappedPropertyName,
-                    OverridePropertyValueStore,
-                    DefaultPropertyValueStore,
-                    fixture,
-                    ResolveConfiguredValue,
-                    out var mappedResolvedValue,
-                    out _))
+                var parameter = parameters[i];
+                if (TryGetMappedPropertyName(parameter, out var mappedPropertyName))
                 {
-                    parameterValues[i] = mappedResolvedValue;
+                    if (PropertyValueResolutionPolicy.TryResolveConfiguredValue(
+                        mappedPropertyName,
+                        OverridePropertyValueStore,
+                        DefaultPropertyValueStore,
+                        fixture,
+                        circularDependencyService,
+                        out var mappedResolvedValue,
+                        out _))
+                    {
+                        parameterValues[i] = mappedResolvedValue;
+                    }
+                    else
+                    {
+                        parameterValues[i] = ValueCreationService.CreateValue(fixture, parameter);
+                    }
+
+                    continue;
+                }
+
+                var configuredPropertyNames = OverridePropertyValueStore.PropertyNames
+                    .Concat(DefaultPropertyValueStore.PropertyNames)
+                    .Distinct(DomainOptions.PropertyNameComparer);
+
+                if (ParameterPropertyMatcher.TryGetPropertyName(parameter, configuredPropertyNames, out var propertyName)
+                    && PropertyValueResolutionPolicy.TryResolveConfiguredValue(
+                        propertyName,
+                        OverridePropertyValueStore,
+                        DefaultPropertyValueStore,
+                        fixture,
+                        circularDependencyService,
+                        out var resolvedValue,
+                        out _))
+                {
+                    parameterValues[i] = resolvedValue;
                 }
                 else
                 {
                     parameterValues[i] = ValueCreationService.CreateValue(fixture, parameter);
                 }
-
-                continue;
             }
 
-            var configuredPropertyNames = OverridePropertyValueStore.PropertyNames
-                .Concat(DefaultPropertyValueStore.PropertyNames)
-                .Distinct(DomainOptions.PropertyNameComparer);
-
-            if (ParameterPropertyMatcher.TryGetPropertyName(parameter, configuredPropertyNames, out var propertyName)
-                && PropertyValueResolutionPolicy.TryResolveConfiguredValue(
-                    propertyName,
-                    OverridePropertyValueStore,
-                    DefaultPropertyValueStore,
-                    fixture,
-                    ResolveConfiguredValue,
-                    out var resolvedValue,
-                    out _))
-            {
-                parameterValues[i] = resolvedValue;
-            }
-            else
-            {
-                parameterValues[i] = ValueCreationService.CreateValue(fixture, parameter);
-            }
+            return (T)constructor.Invoke(parameterValues);
         }
-
-        return (T)constructor.Invoke(parameterValues);
+        finally
+        {
+            ActiveCircularDependencyService = previousCircularDependencyService;
+        }
     }
 
     private bool TryGetMappedPropertyName(ParameterInfo parameter, out string propertyName)
@@ -531,19 +602,6 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
         }
 
         return ExplicitParameterPropertyMappings.TryGetValue(parameterName, out propertyName!);
-    }
-
-    /// <summary>
-    /// Resolves a configured value, evaluating deferred factories when necessary.
-    /// </summary>
-    protected virtual object? ResolveConfiguredValue(object? configuredValue, IFixture fixture)
-    {
-        if (configuredValue is ConfiguredValueFactory configuredValueFactory)
-        {
-            return configuredValueFactory.Resolve(fixture);
-        }
-
-        return configuredValue;
     }
 }
 

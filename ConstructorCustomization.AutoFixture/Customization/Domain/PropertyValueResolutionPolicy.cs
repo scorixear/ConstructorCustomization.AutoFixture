@@ -11,7 +11,7 @@ internal static class PropertyValueResolutionPolicy
         IPropertyValueStore overrideStore,
         IPropertyValueStore defaultStore,
         IFixture fixture,
-        Func<object?, IFixture, object?> configuredValueResolver,
+        ICircularDependencyService circularDependencyService,
         out object? resolvedValue,
         out PropertyValueSource valueSource)
     {
@@ -19,18 +19,18 @@ internal static class PropertyValueResolutionPolicy
         ThrowIfNull(overrideStore);
         ThrowIfNull(defaultStore);
         ThrowIfNull(fixture);
-        ThrowIfNull(configuredValueResolver);
+        ThrowIfNull(circularDependencyService);
 
         if (overrideStore.TryGetValue(propertyName, out var overrideValue))
         {
-            resolvedValue = configuredValueResolver(overrideValue, fixture);
+            resolvedValue = ResolveConfiguredValue(propertyName, circularDependencyService, overrideValue, fixture);
             valueSource = PropertyValueSource.Override;
             return true;
         }
 
         if (defaultStore.TryGetValue(propertyName, out var defaultValue))
         {
-            resolvedValue = configuredValueResolver(defaultValue, fixture);
+            resolvedValue = ResolveConfiguredValue(propertyName, circularDependencyService, defaultValue, fixture);
             valueSource = PropertyValueSource.Default;
             return true;
         }
@@ -38,5 +38,29 @@ internal static class PropertyValueResolutionPolicy
         resolvedValue = null;
         valueSource = PropertyValueSource.Generated;
         return false;
+    }
+
+    /// <summary>
+    /// Resolves a configured value, evaluating deferred factories when necessary.
+    /// </summary>
+    private static object? ResolveConfiguredValue(string propertyName, ICircularDependencyService circularDependencyService, object? configuredValue, IFixture fixture)
+    {
+        var resolvedValue = configuredValue;
+        if (configuredValue is ConfiguredValueFactory configuredValueFactory)
+        {
+            var hasCircularDependency = circularDependencyService.CheckCircularDependency(propertyName);
+            if (hasCircularDependency)
+            {
+                resolvedValue = circularDependencyService.HandleCircularDependency(propertyName, configuredValueFactory.Resolve);
+            }
+            else
+            {
+                circularDependencyService.StartResolving(propertyName);
+                resolvedValue = configuredValueFactory.Resolve(fixture);
+                circularDependencyService.StopResolving(propertyName);
+            }
+        }
+
+        return resolvedValue;
     }
 }
