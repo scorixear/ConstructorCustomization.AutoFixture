@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 
 using ConstructorCustomization.AutoFixture.Customization.Application.Ports;
 
@@ -17,15 +17,15 @@ internal sealed class CaseInsensitiveParameterPropertyMatcher : IParameterProper
     /// <param name="comparer">The comparer used when evaluating parameter and property names.</param>
     public CaseInsensitiveParameterPropertyMatcher(StringComparer comparer)
     {
-        ArgumentNullException.ThrowIfNull(comparer);
+        ThrowIfNull(comparer);
         this.comparer = comparer;
     }
 
     /// <inheritdoc />
     public bool TryGetPropertyName(ParameterInfo parameter, IEnumerable<string> configuredPropertyNames, out string propertyName)
     {
-        ArgumentNullException.ThrowIfNull(parameter);
-        ArgumentNullException.ThrowIfNull(configuredPropertyNames);
+        ThrowIfNull(parameter);
+        ThrowIfNull(configuredPropertyNames);
 
         var parameterName = parameter.Name;
         if (string.IsNullOrWhiteSpace(parameterName))

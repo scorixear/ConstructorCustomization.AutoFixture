@@ -1,4 +1,4 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 using ConstructorCustomization.AutoFixture.Customization.Application.Ports;
 
@@ -12,7 +12,7 @@ internal sealed class PropertyExpressionParser : IPropertyExpressionParser
     /// <inheritdoc />
     public string GetPropertyName(LambdaExpression propertyExpression)
     {
-        ArgumentNullException.ThrowIfNull(propertyExpression);
+        ThrowIfNull(propertyExpression);
 
         var body = propertyExpression.Body;
         if (body is UnaryExpression unaryExpression && unaryExpression.NodeType == ExpressionType.Convert)

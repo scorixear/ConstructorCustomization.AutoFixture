@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <PackageId>ConstructorCustomization.AutoFixture.Examples.Net10</PackageId>
+    <AssemblyName>ConstructorCustomization.AutoFixture.Examples.Net10</AssemblyName>
+    <ProductName>ConstructorCustomization.AutoFixture.Examples.Net10</ProductName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoFixture" />
+    <PackageReference Include="ConstructorCustomization.AutoFixture" />
+  </ItemGroup>
+</Project>

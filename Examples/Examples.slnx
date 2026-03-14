@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/SolutionFiles/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="nuget.config" />
+  </Folder>
+  <Project Path="Example.Net8/Example.Net8.csproj" />
+  <Project Path="Example.Net10/Example.Net10.csproj" />
+  <Project Path="Example.NetStandard21/Example.NetStandard21.csproj" />
+</Solution>

@@ -1,4 +1,4 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
 
 using AutoFixture;
@@ -167,8 +167,8 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     /// </summary>
     protected void UsePlugin(Func<Type, bool> predicate, Func<Type, IFixture, IValueCreationService, object?> factory)
     {
-        ArgumentNullException.ThrowIfNull(predicate);
-        ArgumentNullException.ThrowIfNull(factory);
+        ThrowIfNull(predicate);
+        ThrowIfNull(factory);
         Plugins.Add(new DelegateValueCreationPlugin(predicate, factory));
     }
 
@@ -178,7 +178,7 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     /// </summary>
     protected void UsePlugin(IValueCreationPlugin plugin)
     {
-        ArgumentNullException.ThrowIfNull(plugin);
+        ThrowIfNull(plugin);
         Plugins.Add(plugin);
     }
 
@@ -189,7 +189,7 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     /// <typeparam name="TType">The exact type to handle.</typeparam>
     protected void UseValueFor<TType>(Func<IFixture, TType?> factory)
     {
-        ArgumentNullException.ThrowIfNull(factory);
+        ThrowIfNull(factory);
         Plugins.Add(new DelegateValueCreationPlugin(
             t => t == typeof(TType),
             (type, fixture, svc) => factory(fixture)));
@@ -203,7 +203,7 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     /// <typeparam name="TType">The exact type to handle.</typeparam>
     protected void UseValueFor<TType>(Func<IFixture, IValueCreationService, TType?> factory)
     {
-        ArgumentNullException.ThrowIfNull(factory);
+        ThrowIfNull(factory);
         Plugins.Add(new DelegateValueCreationPlugin(
             t => t == typeof(TType),
             (type, fixture, svc) => factory(fixture, svc)));
@@ -215,7 +215,7 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     /// </summary>
     protected void UseStrategy(ISpecimenBuilderStrategy strategy)
     {
-        ArgumentNullException.ThrowIfNull(strategy);
+        ThrowIfNull(strategy);
         UserStrategies.Add(strategy);
     }
 
@@ -226,7 +226,7 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     /// </summary>
     protected void UseConstructorSelector(IConstructorSelector selector)
     {
-        ArgumentNullException.ThrowIfNull(selector);
+        ThrowIfNull(selector);
         RegisteredConstructorSelector = selector;
     }
 
@@ -237,7 +237,7 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     /// </summary>
     protected void UseParameterPropertyMatcher(IParameterPropertyMatcher matcher)
     {
-        ArgumentNullException.ThrowIfNull(matcher);
+        ThrowIfNull(matcher);
         RegisteredParameterPropertyMatcher = matcher;
     }
 
@@ -251,8 +251,8 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     /// <param name="propertyExpression">The target property expression.</param>
     protected void MatchParameterToProperty<TProperty>(string parameterName, Expression<Func<T, TProperty>> propertyExpression)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(parameterName);
-        ArgumentNullException.ThrowIfNull(propertyExpression);
+        ThrowIfNullOrWhiteSpace(parameterName);
+        ThrowIfNull(propertyExpression);
 
         var propertyName = PropertyExpressionParser.GetPropertyName(propertyExpression);
         ExplicitParameterPropertyMappings[parameterName.Trim()] = propertyName;
@@ -266,7 +266,7 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     /// </summary>
     protected void UsePropertyExpressionParser(IPropertyExpressionParser parser)
     {
-        ArgumentNullException.ThrowIfNull(parser);
+        ThrowIfNull(parser);
         RegisteredPropertyExpressionParser = parser;
     }
 
@@ -279,7 +279,7 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     /// </summary>
     protected void UsePropertyValueStore(Func<IPropertyValueStore> factory)
     {
-        ArgumentNullException.ThrowIfNull(factory);
+        ThrowIfNull(factory);
         RegisteredValueStoreFactory = factory;
     }
 
@@ -292,7 +292,7 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     /// </summary>
     protected void UseValueCreationService(IValueCreationService service)
     {
-        ArgumentNullException.ThrowIfNull(service);
+        ThrowIfNull(service);
         RegisteredValueCreationService = service;
     }
 
@@ -318,7 +318,7 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     /// </summary>
     protected void SetDefault<TProperty>(Expression<Func<T, TProperty>> propertyExpression, Func<TProperty> valueFactory)
     {
-        ArgumentNullException.ThrowIfNull(valueFactory);
+        ThrowIfNull(valueFactory);
         var propertyName = PropertyExpressionParser.GetPropertyName(propertyExpression);
         DefaultPropertyValueStore.SetValue(propertyName, new ConfiguredValueFactory(_ => valueFactory()));
     }
@@ -329,7 +329,7 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     /// </summary>
     protected void SetDefault<TProperty>(Expression<Func<T, TProperty>> propertyExpression, Func<IFixture, TProperty> valueFactory)
     {
-        ArgumentNullException.ThrowIfNull(valueFactory);
+        ThrowIfNull(valueFactory);
         var propertyName = PropertyExpressionParser.GetPropertyName(propertyExpression);
         DefaultPropertyValueStore.SetValue(propertyName, new ConfiguredValueFactory(fixture => valueFactory(fixture)));
     }
@@ -356,7 +356,7 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     /// </summary>
     public TSelf With<TProperty>(Expression<Func<T, TProperty>> propertyExpression, Func<TProperty> valueFactory)
     {
-        ArgumentNullException.ThrowIfNull(valueFactory);
+        ThrowIfNull(valueFactory);
         var propertyName = PropertyExpressionParser.GetPropertyName(propertyExpression);
         OverridePropertyValueStore.SetValue(propertyName, new ConfiguredValueFactory(_ => valueFactory()));
         return (TSelf)this;
@@ -368,7 +368,7 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
     /// </summary>
     public TSelf With<TProperty>(Expression<Func<T, TProperty>> propertyExpression, Func<IFixture, TProperty> valueFactory)
     {
-        ArgumentNullException.ThrowIfNull(valueFactory);
+        ThrowIfNull(valueFactory);
         var propertyName = PropertyExpressionParser.GetPropertyName(propertyExpression);
         OverridePropertyValueStore.SetValue(propertyName, new ConfiguredValueFactory(fixture => valueFactory(fixture)));
         return (TSelf)this;
@@ -521,7 +521,7 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
 
     private bool TryGetMappedPropertyName(ParameterInfo parameter, out string propertyName)
     {
-        ArgumentNullException.ThrowIfNull(parameter);
+        ThrowIfNull(parameter);
 
         var parameterName = parameter.Name;
         if (string.IsNullOrWhiteSpace(parameterName))

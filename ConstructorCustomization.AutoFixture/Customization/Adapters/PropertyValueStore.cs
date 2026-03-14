@@ -1,4 +1,4 @@
-using ConstructorCustomization.AutoFixture.Customization.Application.Ports;
+﻿using ConstructorCustomization.AutoFixture.Customization.Application.Ports;
 
 namespace ConstructorCustomization.AutoFixture.Customization.Adapters;
 
@@ -15,7 +15,7 @@ internal sealed class PropertyValueStore : IPropertyValueStore
     /// <param name="comparer">The comparer used to match property names.</param>
     public PropertyValueStore(StringComparer comparer)
     {
-        ArgumentNullException.ThrowIfNull(comparer);
+        ThrowIfNull(comparer);
         values = new Dictionary<string, object?>(comparer);
     }
 

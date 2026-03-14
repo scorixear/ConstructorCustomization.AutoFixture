@@ -5,9 +5,19 @@ This document describes how to ship a new **major**, **minor**, or **patch** rel
 ## Current Automation (Repository Setup)
 
 - PR validation workflow: [.github/workflows/pr-build-test.yml](.github/workflows/pr-build-test.yml)
-- Manual publish workflow: [.github/workflows/publish-nuget.yml](.github/workflows/publish-nuget.yml)
+- Automated publish workflow: [.github/workflows/publish-nuget.yml](.github/workflows/publish-nuget.yml)
 - Versioning rules: [GitVersion.yml](GitVersion.yml)
 - NuGet target feed: `https://api.nuget.org/v3/index.json`
+- Supported frameworks: `net8.0`, `net10.0`, `netstandard2.1`
+- Authentication: repository secret `NUGET_API_KEY`
+
+### What happens automatically when a GitHub Release is published
+
+1. The **Publish NuGet Package** workflow triggers on `release.published`.
+2. The workflow runs only when the release target is `main`.
+3. The project is built, tested, packed, and pushed to nuget.org.
+4. Symbol packages (`.snupkg`) are pushed to nuget.org.
+5. The workflow checks out the release tag and publishes that exact build.
 
 ## Versioning Model
 
@@ -41,56 +51,33 @@ Use Semantic Versioning:
 ## Release Steps (Git + GitHub + NuGet)
 
 1. Make sure your release commit is on `main` (recommended for stable releases).
-2. Create and push a tag for the target release version.
+2. In GitHub, create a new **Release** from `main` using a tag `vX.Y.Z`.
 
-```bash
-git checkout main
-git pull
+Publishing the release automatically:
+- Triggers **Publish NuGet Package** in GitHub Actions.
+- Builds, tests, packs, and pushes the package (and symbols) to nuget.org.
 
-git tag vX.Y.Z
-git push origin vX.Y.Z
-```
-
-3. In GitHub, open **Actions** -> **Publish NuGet Package**.
-4. Click **Run workflow**.
-5. Select the release tag as the workflow ref (for example `v1.5.0`).
-6. Run the workflow.
-7. Verify in the workflow summary:
-   - SemVer
-   - NuGet version
-8. Verify package published on nuget.org.
-
-## GitHub Release (Recommended)
-
-After the package is published:
-
-1. Open **Releases** in GitHub.
-2. Create a release from the same tag (`vX.Y.Z`).
-3. Add release notes (breaking changes, new features, fixes).
-4. Publish the release.
+3. Monitor the run under **Actions** → **Publish NuGet Package** and verify:
+   - SemVer and NuGet version in the workflow summary.
+  - Package visible on nuget.org.
 
 ## Quick Checklists
 
 ### Patch Release
 
-1. Confirm fix merged.
-2. Tag `vA.B.(C+1)`.
-3. Run publish workflow on the tag.
-4. Create GitHub Release.
+1. Confirm fix merged to `main`.
+2. Create/publish release `vA.B.(C+1)` from `main` — everything else is automatic.
 
 ### Minor Release
 
-1. Confirm feature set merged.
-2. Tag `vA.(B+1).0`.
-3. Run publish workflow on the tag.
-4. Create GitHub Release.
+1. Confirm feature set merged to `main`.
+2. Create/publish release `vA.(B+1).0` from `main` — everything else is automatic.
 
 ### Major Release
 
-1. Confirm breaking changes are documented.
-2. Tag `v(A+1).0.0`.
-3. Run publish workflow on the tag.
-4. Create GitHub Release with migration notes.
+1. Confirm breaking changes documented.
+2. Create/publish release `v(A+1).0.0` from `main` — everything else is automatic.
+3. Add migration notes in the release description.
 
 ## Troubleshooting
 
