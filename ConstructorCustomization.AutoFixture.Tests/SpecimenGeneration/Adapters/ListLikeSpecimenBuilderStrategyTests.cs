@@ -3,7 +3,7 @@ using System.Collections;
 namespace ConstructorCustomization.AutoFixture.Tests.SpecimenGeneration.Adapters;
 
 [TestFixture]
-internal sealed class ListLikeSpecimenBuilderStrategyTests
+public sealed class ListLikeSpecimenBuilderStrategyTests
 {
     [TestCase(typeof(List<int>))]
     [TestCase(typeof(IList<int>))]

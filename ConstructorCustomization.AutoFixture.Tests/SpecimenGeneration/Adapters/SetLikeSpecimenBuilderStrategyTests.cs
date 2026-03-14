@@ -1,7 +1,7 @@
 namespace ConstructorCustomization.AutoFixture.Tests.SpecimenGeneration.Adapters;
 
 [TestFixture]
-internal sealed class SetLikeSpecimenBuilderStrategyTests
+public sealed class SetLikeSpecimenBuilderStrategyTests
 {
     [TestCase(typeof(HashSet<int>))]
     [TestCase(typeof(ISet<int>))]

@@ -3,7 +3,7 @@ using System.Collections;
 namespace ConstructorCustomization.AutoFixture.Tests.SpecimenGeneration.Adapters;
 
 [TestFixture]
-internal sealed class DictionaryLikeSpecimenBuilderStrategyTests
+public sealed class DictionaryLikeSpecimenBuilderStrategyTests
 {
     [TestCase(typeof(Dictionary<string, int>))]
     [TestCase(typeof(IDictionary<string, int>))]

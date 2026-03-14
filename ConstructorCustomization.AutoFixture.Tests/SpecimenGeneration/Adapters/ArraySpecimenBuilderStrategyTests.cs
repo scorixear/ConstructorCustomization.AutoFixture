@@ -1,7 +1,7 @@
 namespace ConstructorCustomization.AutoFixture.Tests.SpecimenGeneration.Adapters;
 
 [TestFixture]
-internal sealed class ArraySpecimenBuilderStrategyTests
+public sealed class ArraySpecimenBuilderStrategyTests
 {
     [Test]
     public void CanBuild_ReturnsTrueForArraysOnly()
