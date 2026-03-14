@@ -8,7 +8,4 @@
   </Folder>
   <Project Path="ConstructorCustomization.AutoFixture/ConstructorCustomization.AutoFixture.csproj" />
   <Project Path="ConstructorCustomization.AutoFixture.Tests/ConstructorCustomization.AutoFixture.Tests.csproj" />
-  <Project Path="Examples/Example.Net8/Example.Net8.csproj" />
-  <Project Path="Examples/Example.Net10/Example.Net10.csproj" />
-  <Project Path="Examples/Example.NetStandard21/Example.NetStandard21.csproj" />
 </Solution>

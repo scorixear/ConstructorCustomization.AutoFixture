@@ -114,6 +114,7 @@ The repository includes three package-consumer examples:
 - `Examples/Example.NetStandard21` (`netstandard2.1`)
 
 All examples reference the `ConstructorCustomization.AutoFixture` NuGet package via `PackageReference`.
+Examples are intentionally isolated from the main `Solution.slnx` to keep PR build/test pipelines independent.
 
 ### Build examples against local artifacts
 
@@ -132,8 +133,8 @@ dotnet pack ConstructorCustomization.AutoFixture/ConstructorCustomization.AutoFi
 1. Restore and build from repository root:
 
 ```bash
-dotnet restore
-dotnet build --configuration Release
+dotnet restore Examples/Examples.slnx --configfile Examples/nuget.config
+dotnet build Examples/Examples.slnx --configuration Release
 ```
 
-If you change the local package version, update `ConstructorCustomization.AutoFixture` in `Directory.Packages.props` to match.
+If you change the local package version, update `ConstructorCustomization.AutoFixture` in `Examples/Directory.Packages.props` to match.

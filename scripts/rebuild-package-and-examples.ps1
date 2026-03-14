@@ -14,24 +14,16 @@ try {
         throw "dotnet pack failed with exit code $LASTEXITCODE"
     }
 
-    Write-Host "Restoring all projects..."
-    dotnet restore
+    Write-Host "Restoring examples solution..."
+    dotnet restore Examples/Examples.slnx --configfile Examples/nuget.config
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet restore failed with exit code $LASTEXITCODE"
     }
 
-    $exampleProjects = @(
-        "Examples/Example.Net10/Example.Net10.csproj",
-        "Examples/Example.Net8/Example.Net8.csproj",
-        "Examples/Example.NetStandard21/Example.NetStandard21.csproj"
-    )
-
-    foreach ($project in $exampleProjects) {
-        Write-Host "Building $project..."
-        dotnet build $project --configuration $Configuration --no-restore
-        if ($LASTEXITCODE -ne 0) {
-            throw "dotnet build failed for $project with exit code $LASTEXITCODE"
-        }
+    Write-Host "Building examples solution..."
+    dotnet build Examples/Examples.slnx --configuration $Configuration --no-restore
+    if ($LASTEXITCODE -ne 0) {
+        throw "dotnet build failed with exit code $LASTEXITCODE"
     }
 
     Write-Host "Completed: local package rebuilt and all examples compiled successfully."
