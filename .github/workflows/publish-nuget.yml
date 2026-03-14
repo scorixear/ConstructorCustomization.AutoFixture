@@ -30,41 +30,26 @@ jobs:
               with:
                   versionSpec: 6.x
 
-            - name: Determine Version
+            - name: Resolve Version
               id: gitversion
-              uses: gittools/actions/gitversion/execute@v4
-
-            - name: Resolve GitVersion outputs
-              id: resolved_version
               shell: bash
               run: |
                   set -euo pipefail
 
-                  semver='${{ steps.gitversion.outputs.semVer }}'
-                  package_version='${{ steps.gitversion.outputs.NuGetVersionV2 }}'
-
-                  if [ -z "${package_version}" ]; then
-                    package_version='${{ steps.gitversion.outputs.nuGetVersionV2 }}'
-                  fi
+                  semver="$(dotnet-gitversion /showvariable SemVer)"
 
                   if [ -z "${semver}" ]; then
-                    echo "GitVersion semVer output is empty."
-                    exit 1
-                  fi
-
-                  if [ -z "${package_version}" ]; then
-                    echo "GitVersion NuGetVersionV2 output is empty."
+                    echo "GitVersion SemVer is empty."
                     exit 1
                   fi
 
                   echo "semver=${semver}" >> "${GITHUB_OUTPUT}"
-                  echo "package_version=${package_version}" >> "${GITHUB_OUTPUT}"
 
             - name: Restore
               run: dotnet restore
 
             - name: Build
-              run: dotnet build --configuration Release --no-restore /p:Version=${{ steps.resolved_version.outputs.semver }}
+              run: dotnet build --configuration Release --no-restore /p:Version=${{ steps.gitversion.outputs.semver }}
 
             - name: Test
               run: dotnet test --configuration Release --no-build --verbosity normal
@@ -75,8 +60,8 @@ jobs:
                   --configuration Release
                   --no-build
                   --output ./artifacts
-                  /p:PackageVersion=${{ steps.resolved_version.outputs.package_version }}
-                  /p:Version=${{ steps.resolved_version.outputs.semver }}
+                  /p:PackageVersion=${{ steps.gitversion.outputs.semver }}
+                  /p:Version=${{ steps.gitversion.outputs.semver }}
 
             - name: Publish package to nuget.org
               shell: bash
@@ -117,6 +102,6 @@ jobs:
 
             - name: Workflow Summary
               run: |
-                  echo "SemVer: ${{ steps.resolved_version.outputs.semver }}" >> "$GITHUB_STEP_SUMMARY"
-                  echo "NuGet version: ${{ steps.resolved_version.outputs.package_version }}" >> "$GITHUB_STEP_SUMMARY"
+                  echo "SemVer: ${{ steps.gitversion.outputs.semver }}" >> "$GITHUB_STEP_SUMMARY"
+                  echo "Package version: ${{ steps.gitversion.outputs.semver }}" >> "$GITHUB_STEP_SUMMARY"
                   echo "Feed: https://api.nuget.org/v3/index.json" >> "$GITHUB_STEP_SUMMARY"
