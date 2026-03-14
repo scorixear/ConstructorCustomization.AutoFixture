@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+    <PackageId>ConstructorCustomization.AutoFixture.Examples.NetStandard21</PackageId>
+    <AssemblyName>ConstructorCustomization.AutoFixture.Examples.NetStandard21</AssemblyName>
+    <ProductName>ConstructorCustomization.AutoFixture.Examples.NetStandard21</ProductName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoFixture" />
+    <PackageReference Include="ConstructorCustomization.AutoFixture" />
+  </ItemGroup>
+</Project>
