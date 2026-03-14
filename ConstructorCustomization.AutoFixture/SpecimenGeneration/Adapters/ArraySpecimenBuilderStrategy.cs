@@ -1,4 +1,4 @@
-using AutoFixture;
+﻿using AutoFixture;
 
 using ConstructorCustomization.AutoFixture.SpecimenGeneration.Ports;
 using ConstructorCustomization.AutoFixture.ValueGeneration.Ports;
@@ -16,9 +16,9 @@ internal sealed class ArraySpecimenBuilderStrategy : ISpecimenBuilderStrategy
     /// <inheritdoc />
     public object? Build(Type type, IFixture fixture, IValueCreationService valueCreationService, ConstructorCustomizationOptions options)
     {
-        ArgumentNullException.ThrowIfNull(type);
-        ArgumentNullException.ThrowIfNull(valueCreationService);
-        ArgumentNullException.ThrowIfNull(options);
+        ThrowIfNull(type);
+        ThrowIfNull(valueCreationService);
+        ThrowIfNull(options);
 
         var elementType = type.GetElementType() ?? throw new InvalidOperationException($"Unable to resolve array element type for {type.FullName}.");
         var array = Array.CreateInstance(elementType, options.CollectionItemCount);

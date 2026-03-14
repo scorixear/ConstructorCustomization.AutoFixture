@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 
 using ConstructorCustomization.AutoFixture.Customization.Application.Ports;
 
@@ -12,8 +12,8 @@ internal sealed class LargestConstructorSelector : IConstructorSelector
     /// <inheritdoc />
     public ConstructorInfo SelectConstructor(Type targetType, ConstructorInfo[] constructors)
     {
-        ArgumentNullException.ThrowIfNull(targetType);
-        ArgumentNullException.ThrowIfNull(constructors);
+        ThrowIfNull(targetType);
+        ThrowIfNull(constructors);
 
         if (constructors.Length == 0)
         {

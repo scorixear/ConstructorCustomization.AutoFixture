@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 
 using AutoFixture;
 using AutoFixture.Kernel;
@@ -33,8 +33,8 @@ public sealed class ValueCreationService : IValueCreationService
         IEnumerable<ISpecimenBuilderStrategy> strategies,
         ConstructorCustomizationOptions options)
     {
-        ArgumentNullException.ThrowIfNull(plugins);
-        ArgumentNullException.ThrowIfNull(strategies);
+        ThrowIfNull(plugins);
+        ThrowIfNull(strategies);
         this.options = options ?? throw new ArgumentNullException(nameof(options));
         this.plugins = plugins;
         this.strategies = [.. strategies];
@@ -43,15 +43,15 @@ public sealed class ValueCreationService : IValueCreationService
     /// <inheritdoc />
     public object? CreateValue(IFixture fixture, ParameterInfo parameter)
     {
-        ArgumentNullException.ThrowIfNull(parameter);
+        ThrowIfNull(parameter);
         return CreateValue(fixture, parameter.ParameterType);
     }
 
     /// <inheritdoc />
     public object? CreateValue(IFixture fixture, Type type)
     {
-        ArgumentNullException.ThrowIfNull(fixture);
-        ArgumentNullException.ThrowIfNull(type);
+        ThrowIfNull(fixture);
+        ThrowIfNull(type);
 
         foreach (var plugin in plugins)
         {

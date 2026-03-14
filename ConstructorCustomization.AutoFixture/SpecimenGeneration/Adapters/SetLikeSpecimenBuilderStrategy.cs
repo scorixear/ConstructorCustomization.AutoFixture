@@ -1,4 +1,4 @@
-using AutoFixture;
+﻿using AutoFixture;
 
 using ConstructorCustomization.AutoFixture.SpecimenGeneration.Ports;
 using ConstructorCustomization.AutoFixture.ValueGeneration.Ports;
@@ -26,9 +26,9 @@ internal sealed class SetLikeSpecimenBuilderStrategy : ISpecimenBuilderStrategy
     /// <inheritdoc />
     public object? Build(Type type, IFixture fixture, IValueCreationService valueCreationService, ConstructorCustomizationOptions options)
     {
-        ArgumentNullException.ThrowIfNull(type);
-        ArgumentNullException.ThrowIfNull(valueCreationService);
-        ArgumentNullException.ThrowIfNull(options);
+        ThrowIfNull(type);
+        ThrowIfNull(valueCreationService);
+        ThrowIfNull(options);
 
         var elementType = type.GetGenericArguments()[0];
         var hashSetType = typeof(HashSet<>).MakeGenericType(elementType);

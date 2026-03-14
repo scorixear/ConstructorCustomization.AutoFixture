@@ -1,4 +1,4 @@
-using AutoFixture;
+﻿using AutoFixture;
 
 using ConstructorCustomization.AutoFixture.Customization.Application.Ports;
 
@@ -15,11 +15,11 @@ internal static class PropertyValueResolutionPolicy
         out object? resolvedValue,
         out PropertyValueSource valueSource)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(propertyName);
-        ArgumentNullException.ThrowIfNull(overrideStore);
-        ArgumentNullException.ThrowIfNull(defaultStore);
-        ArgumentNullException.ThrowIfNull(fixture);
-        ArgumentNullException.ThrowIfNull(configuredValueResolver);
+        ThrowIfNullOrWhiteSpace(propertyName);
+        ThrowIfNull(overrideStore);
+        ThrowIfNull(defaultStore);
+        ThrowIfNull(fixture);
+        ThrowIfNull(configuredValueResolver);
 
         if (overrideStore.TryGetValue(propertyName, out var overrideValue))
         {

@@ -1,4 +1,4 @@
-namespace ConstructorCustomization.AutoFixture.Customization.Domain;
+﻿namespace ConstructorCustomization.AutoFixture.Customization.Domain;
 
 internal sealed class CustomizationDomainOptions
 {
@@ -14,7 +14,7 @@ internal sealed class CustomizationDomainOptions
 
     public static CustomizationDomainOptions From(ConstructorCustomizationOptions options)
     {
-        ArgumentNullException.ThrowIfNull(options);
+        ThrowIfNull(options);
 
         if (options.CollectionItemCount < 0)
         {
