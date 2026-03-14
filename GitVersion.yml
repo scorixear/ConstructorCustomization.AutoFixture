@@ -1,22 +1,21 @@
 mode: ContinuousDeployment
-next-version: 0.0.0
 tag-prefix: '[vV]'
 
 branches:
   main:
     regex: ^main$
-    tag: beta
+    label: beta
     increment: None
 
   develop:
     regex: ^develop$
-    tag: alpha
+    label: alpha
     increment: None
     source-branches:
       - main
 
   pull-request:
-    tag: pr
+    label: pr
     increment: None
 
 ignore:
