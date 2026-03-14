@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 
 using AutoFixture;
 
@@ -29,9 +29,9 @@ internal sealed class DictionaryLikeSpecimenBuilderStrategy : ISpecimenBuilderSt
     /// <inheritdoc />
     public object? Build(Type type, IFixture fixture, IValueCreationService valueCreationService, ConstructorCustomizationOptions options)
     {
-        ArgumentNullException.ThrowIfNull(type);
-        ArgumentNullException.ThrowIfNull(valueCreationService);
-        ArgumentNullException.ThrowIfNull(options);
+        ThrowIfNull(type);
+        ThrowIfNull(valueCreationService);
+        ThrowIfNull(options);
 
         var genericArguments = type.GetGenericArguments();
         var keyType = genericArguments[0];
