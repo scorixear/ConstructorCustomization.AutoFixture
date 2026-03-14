@@ -2,13 +2,36 @@
 
 Constructor-first customization for AutoFixture with clean defaults, per-test overrides, and extension points for advanced object creation.
 
-## Install
+## Why This Package?
+
+`AutoFixture` provides powerful Fixture creation and customization capabilities.
+But it creates objects by setting properties after the constructor is called.
+
+*But what if you have Guards and follow the Always-Valid-Model principle?*
+
+`ConstructorCustomization.AutoFixture` provides a constructor-first customization model for `AutoFixture`. This is a package only built on `AutoFixture` and provides an `ICustomization` implementation with minimal effort to get started but highly extensible for advanced scenarios.
+
+### ✨ Features
+- Create simple objects in a one-liner.
+- Use Fluent API to override defaults on a per-test basis.
+- Explicitly map constructor parameters to properties.
+- Pluggable extension model for matching and specimen/value creation behavior.
+- Fully compatible with AutoFixture ecosystem and existing customizations.
+
+### 🔧 How it works
+Under the hood, `ConstructorCustomization` uses reflection to retrieve a constructor and matches property names to parameter names.
+Values are created using `AutoFixture`'s existing value creation.
+
+Constructor selection, parameter matching and value creation can all be customized using the provided extension models.
+
+
+## 📦 Install
 
 ```bash
 dotnet add package ConstructorCustomization.AutoFixture
 ```
 
-## Quick Entry
+## ⚡ Quick Entry
 
 Use this when you want a fast start in a test.
 
@@ -26,7 +49,7 @@ fixture.Customize(new ConstructorCustomization<Person>()
 var person = fixture.Create<Person>();
 ```
 
-## Simple Usage Pattern
+## 🧩 Simple Usage Pattern
 
 For reusable test behavior, create a typed customization once and use it across many tests.
 
@@ -57,7 +80,7 @@ var youngPerson = fixture.Create<Person>();
 customization.Clear();
 ```
 
-## Capabilities at a Glance
+## ✅ Capabilities at a Glance
 
 - Constructor-first object creation for test models.
 - Stable defaults with `SetDefault(...)`.
@@ -66,14 +89,15 @@ customization.Clear();
 - Deferred value generation with factory delegates.
 - Pluggable extension model for matching and specimen/value creation behavior.
 
-## Documentation and Wiki
+## 📚 Documentation and Wiki
 
-- Wiki home: [Home](wiki/Home.md)
-- Getting started: [Getting Started](wiki/Getting-Started.md)
-- Behavior customization: [Customizing Behavior](wiki/Customizing-Behavior.md)
-- Extension points: [Extensions Overview](wiki/Extensions-Overview.md)
+- Wiki home: [Home](https://github.com/scorixear/ConstructorCustomization.AutoFixture/wiki)
+- Getting started: [Getting Started](https://github.com/scorixear/ConstructorCustomization.AutoFixture/wiki/Getting-Started)
+- Behavior customization: [Customizing Behavior](https://github.com/scorixear/ConstructorCustomization.AutoFixture/wiki/Customizing-Behavior)
+- Extension points: [Extensions Overview](https://github.com/scorixear/ConstructorCustomization.AutoFixture/wiki/Extensions-Overview)
+- How it Works: [Creation Pipeline](https://github.com/scorixear/ConstructorCustomization.AutoFixture/wiki/Creation-Pipeline)
 
-## Build and Test
+## 🛠️ Build and Test
 
 ```bash
 dotnet restore
