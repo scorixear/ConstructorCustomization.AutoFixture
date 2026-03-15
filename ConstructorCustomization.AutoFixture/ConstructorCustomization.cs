@@ -157,7 +157,7 @@ public class ConstructorCustomization<T, TSelf> : ICustomization
         fixture.Customize<T>(f => f.FromFactory(() =>
         {
             return CreateInstance(fixture);
-        }));
+        }).OmitAutoProperties());
     }
 
     // ── Subclass registration — for use inside Configure() ──────────────────
