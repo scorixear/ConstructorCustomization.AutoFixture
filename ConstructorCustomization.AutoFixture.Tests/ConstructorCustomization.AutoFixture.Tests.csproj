@@ -21,4 +21,8 @@
   <ItemGroup>
     <ProjectReference Include="..\ConstructorCustomization.AutoFixture\ConstructorCustomization.AutoFixture.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Performance\" />
+  </ItemGroup>
 </Project>
