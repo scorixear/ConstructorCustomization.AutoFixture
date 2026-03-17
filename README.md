@@ -1,4 +1,11 @@
-# ConstructorCustomization.AutoFixture
+
+<h1>
+<img src="./Docs/logo.png" alt="Icon" width="80" />&nbsp;&nbsp;ConstructorCustomization.AutoFixture</h1>
+
+[![License](https://img.shields.io/badge/license-MIT-green)](https://raw.githubusercontent.com/scorixear/ConstructorCustomization.AutoFixture/main/LICENSE)
+[![Release](https://github.com/scorixear/ConstructorCustomization.AutoFixture/actions/workflows/publish-nuget.yml/badge.svg)](https://github.com/scorixear/ConstructorCustomization.AutoFixture/actions/workflows/publish-nuget.yml)
+[![NuGet Version](https://img.shields.io/nuget/v/ConstructorCustomization.AutoFixture)](https://www.nuget.org/packages/ConstructorCustomization.AutoFixture/)
+[![NuGet downloads](https://img.shields.io/nuget/dt/ConstructorCustomization.AutoFixture)](https://www.nuget.org/packages/ConstructorCustomization.AutoFixture/)
 
 Constructor-first customization for AutoFixture with clean defaults, per-test overrides, and extension points for advanced object creation.
 
