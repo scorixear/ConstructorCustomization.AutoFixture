@@ -4,6 +4,12 @@ on:
     release:
         types:
             - published
+    workflow_dispatch:
+        inputs:
+            test_mode:
+                description: "Run in test mode (skip nuget push)"
+                required: false
+                default: "false"
 
 permissions:
     contents: read
@@ -69,6 +75,7 @@ jobs:
                   /p:Version=${{ steps.gitversion.outputs.semver }}
 
             - name: Publish package to nuget.org
+              if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.test_mode == 'false' }}
               shell: bash
               run: |
                   set -euo pipefail
