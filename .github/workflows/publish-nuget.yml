@@ -4,9 +4,16 @@ on:
     release:
         types:
             - published
+    workflow_dispatch:
+        inputs:
+            test_mode:
+                description: "Run in test mode (skip nuget push)"
+                required: false
+                default: "false"
 
 permissions:
     contents: read
+    deployments: write
 
 concurrency:
     group: publish-nuget
@@ -68,6 +75,7 @@ jobs:
                   /p:Version=${{ steps.gitversion.outputs.semver }}
 
             - name: Publish package to nuget.org
+              if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.test_mode == 'false' }}
               shell: bash
               run: |
                   set -euo pipefail
@@ -86,6 +94,7 @@ jobs:
                   done
 
             - name: Publish symbols to nuget.org
+              if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.test_mode == 'false' }}
               shell: bash
               run: |
                   set -euo pipefail
@@ -109,3 +118,28 @@ jobs:
                   echo "SemVer: ${{ steps.gitversion.outputs.semver }}" >> "$GITHUB_STEP_SUMMARY"
                   echo "Package version: ${{ steps.gitversion.outputs.semver }}" >> "$GITHUB_STEP_SUMMARY"
                   echo "Feed: https://api.nuget.org/v3/index.json" >> "$GITHUB_STEP_SUMMARY"
+    deploy:
+        needs: publish
+        runs-on: ubuntu-latest
+        environment: nuget-production
+        steps:
+            - name: Create deployment
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      const deployment = await github.rest.repos.createDeployment({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        ref: context.ref,
+                        environment: 'nuget-production',
+                        required_contexts: [],
+                        auto_merge: false
+                      });
+
+                      await github.rest.repos.createDeploymentStatus({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        deployment_id: deployment.data.id,
+                        state: 'success',
+                        description: 'Package published to nuget.org'
+                      });
