@@ -94,6 +94,7 @@ jobs:
                   done
 
             - name: Publish symbols to nuget.org
+              if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.test_mode == 'false' }}
               shell: bash
               run: |
                   set -euo pipefail
