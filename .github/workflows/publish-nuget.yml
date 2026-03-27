@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
     publish:
-        if: ${{ github.event.release.target_commitish == 'main' && startsWith(github.event.release.tag_name, 'v') }}
+        if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'release' && github.event.release.target_commitish == 'main' && startsWith(github.event.release.tag_name, 'v')) }}
         runs-on: ubuntu-latest
 
         steps:
