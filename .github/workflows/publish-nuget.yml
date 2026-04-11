@@ -124,7 +124,7 @@ jobs:
         environment: nuget-production
         steps:
             - name: Create deployment
-              uses: actions/github-script@v7
+              uses: actions/github-script@v9
               with:
                   script: |
                       const deployment = await github.rest.repos.createDeployment({
